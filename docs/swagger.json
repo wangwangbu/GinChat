@@ -84,7 +84,7 @@
                 "tags": [
                     "用户"
                 ],
-                "summary": "所有用户",
+                "summary": "登录验证",
                 "parameters": [
                     {
                         "type": "string",

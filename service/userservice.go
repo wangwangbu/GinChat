@@ -5,10 +5,13 @@ import (
 	"ginchat/models"
 	"ginchat/utils"
 	"math/rand"
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 // GetUserList godoc
@@ -45,7 +48,13 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
-
+	if user.Name == "" || password == "" {
+		c.JSON(200, gin.H{
+			"code": -1,
+			"message": "用户名和密码不能为空",
+		})
+		return
+	}
 	data := models.FindUserByName(user.Name)
 	if data.Name != "" {
 		c.JSON(200, gin.H{
@@ -149,4 +158,53 @@ func UpdateUser(c *gin.Context) {
 			"message": "修改用户成功",
 		})
 	}
+}
+
+// 防止跨域站点伪造请求
+var upGrade = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+
+func SendMsg(c *gin.Context) {
+	fmt.Println("SenMsg...")
+	ws, err := upGrade.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer func(ws *websocket.Conn) {
+		err = ws.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(ws)
+	MsgHandler(ws, c)
+}
+
+func MsgHandler(ws *websocket.Conn, c *gin.Context) {
+	msg, err := utils.Subscribe(c, utils.PublishKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	tm := time.Now().Format("2006-01-02 15:04:05")
+	m := fmt.Sprintf("[ws][%s]:%s", tm, msg)
+	err = ws.WriteMessage(1, []byte(m))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func SendUserMsg(c *gin.Context) {
+	models.Chat(c.Writer, c.Request)
+}
+
+func SearchFriends(c *gin.Context) {
+	id, _ := strconv.Atoi(c.PostForm("userId"))
+	userId := uint(id)
+	friends := models.SearchFriends(userId)
+	utils.RespOKList(c.Writer, friends, len(friends))
 }
