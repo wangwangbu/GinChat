@@ -142,7 +142,7 @@
                 this.loadfriends();
                 this.loadcommunitys();
                 this.loaddoutures();
-                setInterval(this.heartbeat, 10 * 1000);
+                // setInterval(this.heartbeat, 10 * 1000);
                 var user = userInfo()
                 //初始化websocket
                 this.initwebsocket()
@@ -457,7 +457,7 @@
 
                 },
                 initwebsocket: function () {
-                    var url = "ws://" + location.host + "/user/sendUserMsg?userId=" + userId() + "&token=" + util.parseQuery("token");
+                    var url = "ws://" + location.host + "/chat?userId=" + userId() + "&token=" + util.parseQuery("token");
                     this.webSocket = new WebSocket(url);
                     //消息处理
                     this.webSocket.onmessage = function (evt) {

@@ -30,3 +30,7 @@ func ToChat(c *gin.Context) {
 		"user": user,
 	})
 }
+
+func Chat(c *gin.Context) {
+	models.Chat(c.Writer, c.Request)
+}

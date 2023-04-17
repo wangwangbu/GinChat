@@ -85,6 +85,7 @@ func sendProc(node *Node) {
 	for {
 		select {
 		case data := <-node.DataQueue:
+			fmt.Println("[ws] sendProc >>> msg: ", string(data))
 			err := node.Conn.WriteMessage(websocket.TextMessage, data)
 			if err != nil {
 				fmt.Println(err)
@@ -102,7 +103,7 @@ func recvProc(node *Node) {
 			return
 		}
 		broadMsg(data)
-		fmt.Println("[ws]<<<<<<", data)
+		fmt.Println("[ws] recvProc <<<<<<", string(data))
 	}
 }
 
@@ -115,12 +116,13 @@ func broadMsg(data []byte) {
 func init() {
 	go udpSendProc()
 	go udpRecvProc()
+	fmt.Println("init goroutine")
 }
 
 // 完成 udp 数据发送协程
 func udpSendProc() {
 	con, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.IPv4(10, 249, 0, 255),
+		IP:   net.IPv4(10, 249, 42, 243),
 		Port: 3000,
 	})
 	defer con.Close()
@@ -130,6 +132,7 @@ func udpSendProc() {
 	for {
 		select {
 		case data := <-udpsendChan:
+			fmt.Println("udpSendProc data: ", string(data))
 			_, err := con.Write(data)
 			if err != nil {
 				fmt.Println(err)
@@ -151,6 +154,7 @@ func udpRecvProc() {
 	}
 	for {
 		var buf [512]byte
+		fmt.Println("udpRecvProc...")
 		n, err := con.Read(buf[0:])
 		if err != nil {
 			fmt.Println(err)
@@ -162,6 +166,7 @@ func udpRecvProc() {
 
 // 后端调度逻辑处理
 func dispatch(data []byte) {
+	fmt.Println("dispatch data", string(data))
 	msg := Message{}
 	err := json.Unmarshal(data, &msg)
 	if err != nil {
@@ -179,6 +184,7 @@ func dispatch(data []byte) {
 }
 
 func sendMsg(userId uint, msg []byte) {
+	fmt.Println("sendMsg >>>> userID: ", userId, " msg", string(msg))
 	rwLocker.RLock()
 	node, ok := clientMap[userId]
 	rwLocker.RUnlock()
