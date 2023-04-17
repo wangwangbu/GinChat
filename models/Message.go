@@ -122,7 +122,7 @@ func init() {
 // 完成 udp 数据发送协程
 func udpSendProc() {
 	con, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.IPv4(10, 249, 42, 243),
+		IP:   net.IPv4(10, 249, 42, 243),	// 注意 IP 可能变化
 		Port: 3000,
 	})
 	defer con.Close()
